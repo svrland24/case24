@@ -57,16 +57,11 @@
       <!-- Logo & Title -->
       <div class="flex items-center space-x-3 space-x-reverse">
         <div class="bg-brand-500 p-3 rounded-2xl shadow-md flex items-center justify-center">
-
-
-
-
-
-          
+          <i class="fa-solid fa-scale-balanced text-2xl text-white"></i>
         </div>
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold tracking-wide"></h1>
-          <p class="text-xs text-slate-300 font-normal hidden sm:block"></p>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-wide">মামলা ও পেমেন্ট পোর্টাল</h1>
+          <p class="text-xs text-slate-300 font-normal hidden sm:block">মামলা ও টাকা হিসাব রাখার সহজ ডিজিটাল খাতা</p>
         </div>
       </div>
 
@@ -640,7 +635,7 @@
           }
           db = firebase.firestore();
           isFirebaseActive = true;
-          updateStatusBanner(true, 'Connected', ' ', 'bg-emerald-50 text-emerald-800 border-emerald-200', 'fa-circle-check text-emerald-600');
+          updateStatusBanner(true, 'Firebase ক্লাউড ডাটাবেজ কানেক্টেড (smartcasebd-4f9a6)', 'তথ্য সয়ংক্রিয়ভাবে ক্লাউড ডাটাবেজে সেভ হচ্ছে।', 'bg-emerald-50 text-emerald-800 border-emerald-200', 'fa-circle-check text-emerald-600');
           
           // Listen to real-time updates from Firebase
           db.collection('cases').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
@@ -1011,7 +1006,18 @@
                   কেস: ${toBengaliNumerals(c.caseNo || '-')}
                 </td>
                 <td class="py-4 px-4 font-bold text-blue-700 border-r border-slate-100 ${borderClass}">
-                  অ্যাপ: ${toBengaliNumerals(c.appNo || '-')}
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span>অ্যাপ: ${toBengaliNumerals(c.appNo || '-')}</span>
+                    ${c.appNo && c.appNo !== '-' ? `
+                      <button type="button"
+                        onclick="openApplicationStatus('${String(c.appNo).replace(/'/g, "\\'")}')"
+                        title="এই আবেদনটির অবস্থা দেখুন"
+                        class="application-status-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-extrabold transition active:scale-95 whitespace-nowrap">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        অবস্থা জানুন
+                      </button>
+                    ` : ''}
+                  </div>
                 </td>
                 <td class="py-4 px-4 text-center border-r border-slate-200 ${borderClass}">
                   ${statusBadgeHtml}
@@ -1047,7 +1053,18 @@
                   কেস: ${toBengaliNumerals(c.caseNo || '-')}
                 </td>
                 <td class="py-4 px-4 font-bold text-blue-700 border-r border-slate-100 ${borderClass}">
-                  অ্যাপ: ${toBengaliNumerals(c.appNo || '-')}
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span>অ্যাপ: ${toBengaliNumerals(c.appNo || '-')}</span>
+                    ${c.appNo && c.appNo !== '-' ? `
+                      <button type="button"
+                        onclick="openApplicationStatus('${String(c.appNo).replace(/'/g, "\\'")}')"
+                        title="এই আবেদনটির অবস্থা দেখুন"
+                        class="application-status-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-extrabold transition active:scale-95 whitespace-nowrap">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        অবস্থা জানুন
+                      </button>
+                    ` : ''}
+                  </div>
                 </td>
                 <td class="py-4 px-4 text-center border-r border-slate-200 ${borderClass}">
                   ${statusBadgeHtml}
@@ -1088,7 +1105,18 @@
             <div class="flex items-center justify-between text-sm bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200">
               <div class="space-y-0.5">
                 <div class="font-extrabold text-slate-900">কেস নং: ${toBengaliNumerals(c.caseNo || '-')}</div>
-                <div class="text-blue-700 text-xs font-bold">অ্যাপ নং: ${toBengaliNumerals(c.appNo || '-')}</div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <div class="text-blue-700 text-xs font-bold">অ্যাপ নং: ${toBengaliNumerals(c.appNo || '-')}</div>
+                  ${c.appNo && c.appNo !== '-' ? `
+                    <button type="button"
+                      onclick="openApplicationStatus('${String(c.appNo).replace(/'/g, "\\'")}')"
+                      title="এই আবেদনটির অবস্থা দেখুন"
+                      class="application-status-btn inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-extrabold transition active:scale-95 whitespace-nowrap">
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                      অবস্থা জানুন
+                    </button>
+                  ` : ''}
+                </div>
               </div>
               <div>${statusBadgeHtml}</div>
             </div>
@@ -1163,6 +1191,19 @@
       }
     }
 
+
+    // --- APPLICATION STATUS LOOKUP ---
+    function openApplicationStatus(appNo) {
+      const applicationNumber = String(appNo || '').trim();
+      if (!applicationNumber || applicationNumber === '-') return;
+
+      // Chrome extension (if installed) will automatically process the application
+      // on the mutation.land.gov.bd search page.
+      const targetUrl = 'https://mutation.land.gov.bd/search-application?applicationId=' +
+        encodeURIComponent(applicationNumber);
+
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    }
 
     // --- MODAL & FORM HANDLERS ---
     function openAddModal() {
