@@ -76,7 +76,7 @@
         <!-- Mode Toggle Button -->
         <button id="toggleModeBtn" onclick="toggleAdminMode()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs sm:text-sm font-medium border border-slate-700 flex items-center gap-2 transition shadow-sm active:scale-95">
           <i id="toggleModeIcon" class="fa-solid fa-user-shield text-amber-400"></i>
-          <span id="toggleModeBtnText">এডমিন মোড চালু করুন</span>
+          <span id="toggleModeBtnText">এডমিন মোড चालू করুন</span>
         </button>
 
         <!-- Firebase Config Button -->
@@ -206,7 +206,7 @@
       </div>
 
       <div class="hidden md:block text-xs text-slate-500 italic">
-        * এক্সেলের মত প্রতিটি কেস আলাদা সারিতে (Row) প্রদর্শিত হচ্ছে।
+        * তারিখের নিচে কতদিন আগের এন্ট্রি তা সয়ংক্রিয়ভাবে হিসাব হয়ে দেখাবে।
       </div>
     </div>
 
@@ -268,7 +268,7 @@
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-slate-100 border-b border-slate-300 text-xs font-bold text-slate-700 uppercase tracking-wider">
-            <th class="py-3 px-4 border-r border-slate-200">তারিখ</th>
+            <th class="py-3 px-4 border-r border-slate-200">তারিখ ও সময়কাল</th>
             <th class="py-3 px-4 border-r border-slate-200">ক্লায়েন্টের নাম ও নম্বর</th>
             <th class="py-3 px-4 border-r border-slate-200">মামলা নং (Case)</th>
             <th class="py-3 px-4 border-r border-slate-200">আবেদন নং (App)</th>
@@ -813,6 +813,7 @@
     function filterByClientName(name) {
       document.getElementById('searchInput').value = name;
       closeClientsModal();
+      closeDueModal();
       renderData();
     }
 
@@ -967,7 +968,11 @@
             tableRowsHtml += `
               <tr class="hover:bg-slate-50/90 transition bg-white">
                 <td rowspan="${caseCount}" class="align-top py-3.5 px-4 text-xs font-semibold text-slate-600 whitespace-nowrap border-r border-slate-200 border-b-2 border-b-slate-300 bg-slate-50/50">
-                  ${formatDate(item.date)}
+                  <div class="font-bold text-slate-800">${formatDate(item.date)}</div>
+                  <div class="text-[11px] text-slate-600 font-medium mt-1 inline-flex items-center gap-1 bg-slate-200/70 px-2 py-0.5 rounded-md">
+                    <i class="fa-regular fa-clock text-[10px]"></i>
+                    <span>${getDaysDifferenceText(item.date)}</span>
+                  </div>
                 </td>
                 <td rowspan="${caseCount}" class="align-top py-3.5 px-4 font-bold text-slate-800 whitespace-nowrap border-r border-slate-200 border-b-2 border-b-slate-300 bg-slate-50/50">
                   <div class="flex items-center gap-2.5">
@@ -1092,8 +1097,9 @@
                     <span>${item.name || '-'}</span>
                     ${isArchived ? '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">আর্কাইভড</span>' : ''}
                   </h4>
-                  <div class="flex items-center gap-2 text-xs text-slate-400">
-                    <span>${formatDate(item.date)}</span>
+                  <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <span class="font-semibold text-slate-700">${formatDate(item.date)}</span>
+                    <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-medium"><i class="fa-regular fa-clock text-[9px]"></i> ${getDaysDifferenceText(item.date)}</span>
                     ${item.phone ? `<span>•</span><a href="tel:${item.phone}" class="text-brand-600 font-semibold"><i class="fa-solid fa-phone text-[10px]"></i> ${item.phone}</a>` : ''}
                   </div>
                 </div>
@@ -1360,7 +1366,7 @@
               <div>
                 <h4 class="font-bold text-slate-800 text-sm">${r.name || '-'}</h4>
                 <p class="text-xs text-slate-500">${r.phone ? `<a href="tel:${r.phone}" class="text-brand-600 font-semibold hover:underline"><i class="fa-solid fa-phone text-[10px]"></i> ${r.phone}</a>` : 'নম্বর নেই'}</p>
-                <span class="text-[11px] text-slate-400">তারিখ: ${formatDate(r.date)} • ${(r.cases || []).length}টি কেস</span>
+                <span class="text-[11px] text-slate-400">তারিখ: ${formatDate(r.date)} (${getDaysDifferenceText(r.date)}) • ${(r.cases || []).length}টি কেস</span>
               </div>
             </div>
             <div class="text-right">
@@ -1430,24 +1436,47 @@
       return dateStr;
     }
 
+    function getDaysDifferenceText(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return '';
+
+      const recordDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      const today = new Date();
+      
+      recordDate.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      const diffTime = today.getTime() - recordDate.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+
+      if (diffDays === 0) return 'আজকে';
+      if (diffDays === 1) return '১ দিন আগে';
+      if (diffDays > 1) return `${diffDays} দিন আগে`;
+      if (diffDays === -1) return 'আগামীকাল';
+      if (diffDays < -1) return `${Math.abs(diffDays)} দিন বাকি`;
+      return '';
+    }
+
     function exportToCSV() {
       if (records.length === 0) {
         alert('ডাউনলোড করার মত কোন তথ্য নেই।');
         return;
       }
 
-      let csv = 'Date,Name,Phone,Case No,Application No,Status,Total,Paid,Due\n';
+      let csv = 'Date,Elapsed Days,Name,Phone,Case No,Application No,Status,Total,Paid,Due\n';
       records.forEach(r => {
         const cases = r.cases || [];
+        const elapsed = getDaysDifferenceText(r.date);
         if (cases.length === 0) {
-          csv += `"${r.date}","${r.name}","${r.phone || ''}","","","","${r.total}","${r.paid}","${r.due}"\n`;
+          csv += `"${r.date}","${elapsed}","${r.name}","${r.phone || ''}","","","","${r.total}","${r.paid}","${r.due}"\n`;
         } else {
           cases.forEach((c, i) => {
             const statusBn = (c.status === 'completed') ? 'হয়েছে' : 'হয়নি';
             if (i === 0) {
-              csv += `"${r.date}","${r.name}","${r.phone || ''}","${c.caseNo || ''}","${c.appNo || ''}","${statusBn}","${r.total}","${r.paid}","${r.due}"\n`;
+              csv += `"${r.date}","${elapsed}","${r.name}","${r.phone || ''}","${c.caseNo || ''}","${c.appNo || ''}","${statusBn}","${r.total}","${r.paid}","${r.due}"\n`;
             } else {
-              csv += `"","","","${c.caseNo || ''}","${c.appNo || ''}","${statusBn}","","",""\n`;
+              csv += `"","","","","${c.caseNo || ''}","${c.appNo || ''}","${statusBn}","","",""\n`;
             }
           });
         }
