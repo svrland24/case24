@@ -104,19 +104,22 @@
       </button>
     </div>
 
-    <!-- Analytics / Stat Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+    <!-- Analytics / Stat Cards (5 Cards Grid) -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
       
-      <!-- Card 1: Total Cases -->
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
+      <!-- Card 1: Total Clients (CLICKABLE) -->
+      <div onclick="openClientsModal()" title="সকল ক্লায়েন্ট তালিকা দেখতে ক্লিক করুন" 
+        class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-brand-300 transition cursor-pointer group relative overflow-hidden">
         <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs sm:text-sm font-medium">মোট ক্লায়েন্ট</span>
-          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+          <span class="text-xs sm:text-sm font-semibold group-hover:text-brand-600 transition">মোট ক্লায়েন্ট</span>
+          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm group-hover:bg-brand-600 group-hover:text-white transition">
             <i class="fa-solid fa-users"></i>
           </div>
         </div>
         <div id="statTotalClients" class="text-xl sm:text-2xl font-bold text-slate-900">0</div>
-        <div class="text-xs text-slate-400 mt-1"><span id="statTotalCases">0</span> টি মোট মামলা</div>
+        <div class="text-[11px] text-brand-600 font-semibold mt-1 flex items-center gap-1">
+          <span>তালিকা দেখুন</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </div>
       </div>
 
       <!-- Card 2: Total Contract / Amount -->
@@ -128,7 +131,7 @@
           </div>
         </div>
         <div id="statTotalAmount" class="text-xl sm:text-2xl font-bold text-slate-900">৳0</div>
-        <div class="text-xs text-slate-400 mt-1">দাবিকৃত মোট পরিমাণ</div>
+        <div class="text-xs text-slate-400 mt-1"><span id="statTotalCases">0</span> টি মোট মামলা</div>
       </div>
 
       <!-- Card 3: Total Paid -->
@@ -143,17 +146,33 @@
         <div class="text-xs text-slate-400 mt-1">আদায়কিত পরিশোধ</div>
       </div>
 
-      <!-- Card 4: Total Due -->
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
+      <!-- Card 4: Total Due (CLICKABLE - Un-equalized) -->
+      <div onclick="openDueModal()" title="বকেয়ার তালিকা দেখতে ক্লিক করুন" 
+        class="bg-white p-4 rounded-2xl border border-rose-100 shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
         <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs sm:text-sm font-medium">মোট বকেয়া (Due)</span>
-          <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm">
+          <span class="text-xs sm:text-sm font-semibold text-rose-700">মোট বকেয়া (Due)</span>
+          <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-sm group-hover:bg-rose-600 group-hover:text-white transition">
             <i class="fa-solid fa-wallet"></i>
           </div>
         </div>
-        <div id="statTotalDue" class="text-xl sm:text-2xl font-bold text-slate-900">৳0</div>
-        <div id="statTotalDueSub" class="text-xs text-slate-400 mt-1">নিট ব্যালেন্স</div>
+        <div id="statTotalDue" class="text-xl sm:text-2xl font-bold text-rose-600">৳0</div>
+        <div class="text-[11px] text-rose-600 font-semibold mt-1 flex items-center gap-1">
+          <span>কার কত বকেয়া দেখুন</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </div>
       </div>
+
+      <!-- Card 5: Total Advance -->
+      <div class="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition col-span-2 md:col-span-1">
+        <div class="flex items-center justify-between text-slate-500 mb-2">
+          <span class="text-xs sm:text-sm font-medium text-emerald-700">মোট এডভান্স (Advance)</span>
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+          </div>
+        </div>
+        <div id="statTotalAdvance" class="text-xl sm:text-2xl font-bold text-emerald-600">৳0</div>
+        <div class="text-xs text-slate-400 mt-1">অতিরিক্ত জমা টাকা</div>
+      </div>
+
     </div>
 
     <!-- Navigation Tabs (All, Active, Archive) -->
@@ -197,8 +216,11 @@
       <!-- Search Box -->
       <div class="relative w-full md:w-96">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-        <input type="text" id="searchInput" oninput="renderData()" placeholder="নাম, মামলা বা অ্যাপ্লিকেশন নং দিয়ে খুঁজুন..." 
-          class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+        <input type="text" id="searchInput" oninput="renderData()" placeholder="নাম, নম্বর বা মামলা নং দিয়ে খুঁজুন..." 
+          class="w-full pl-10 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
 
       <!-- Filter & Action Buttons -->
@@ -225,13 +247,19 @@
       </div>
     </div>
 
+    <!-- Active Search Filter Badge Notification -->
+    <div id="searchFilterNotification" class="hidden bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 text-xs text-blue-800 flex items-center justify-between">
+      <span><i class="fa-solid fa-filter text-blue-600 mr-1"></i> বর্তমানে ফিল্টার করা ফিল্টারে ডাটা দেখানো হচ্ছে: <strong id="searchFilterText"></strong></span>
+      <button onclick="clearSearch()" class="text-blue-600 hover:underline font-bold">ফিল্টার রিমুভ করুন</button>
+    </div>
+
     <!-- Data Display Section -->
     
     <!-- Admin Notice (Visible only in Admin Mode) -->
     <div id="adminNotice" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs sm:text-sm flex items-center justify-between">
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-user-gear text-amber-600"></i>
-        <span><strong>এডমিন মোড সক্রিয়:</strong> নাম/মামলা এডিট করতে ✏️ পেন্সিল আইকনে ক্লিক করুন এবং স্ট্যাটাস পরিবর্তন করতে সরাসরি 🟢/🔴 বাটনে ক্লিক করুন।</span>
+        <span><strong>এডমিন মোড সক্রিয়:</strong> নাম, নম্বর বা মামলা এডিট করতে ✏️ পেন্সিল আইকনে ক্লিক করুন এবং স্ট্যাটাস পরিবর্তন করতে সরাসরি 🟢/🔴 বাটনে ক্লিক করুন।</span>
       </div>
     </div>
 
@@ -241,7 +269,7 @@
         <thead>
           <tr class="bg-slate-100 border-b border-slate-300 text-xs font-bold text-slate-700 uppercase tracking-wider">
             <th class="py-3 px-4 border-r border-slate-200">তারিখ</th>
-            <th class="py-3 px-4 border-r border-slate-200">ক্লায়েন্টের নাম</th>
+            <th class="py-3 px-4 border-r border-slate-200">ক্লায়েন্টের নাম ও নম্বর</th>
             <th class="py-3 px-4 border-r border-slate-200">মামলা নং (Case)</th>
             <th class="py-3 px-4 border-r border-slate-200">আবেদন নং (App)</th>
             <th class="py-3 px-4 border-r border-slate-200 text-center">কেস স্ট্যাটাস</th>
@@ -298,7 +326,7 @@
       <form id="recordForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
         <input type="hidden" id="recordId">
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <!-- Date Field -->
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">তারিখ (Date) *</label>
@@ -306,10 +334,20 @@
               class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
           </div>
 
-          <!-- Name Field -->
+          <!-- Name Field with Autocomplete -->
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">ক্লায়েন্টের নাম (Name) *</label>
-            <input type="text" id="inputName" required placeholder="যেমন: Sunny, Emon..." 
+            <input type="text" id="inputName" list="existingClientsList" required placeholder="নাম টাইপ বা সিলেক্ট করুন..." oninput="autoFillClientPhone()"
+              class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            <datalist id="existingClientsList">
+              <!-- Dynamically populated by JS -->
+            </datalist>
+          </div>
+
+          <!-- Mobile Number Field -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">মোবাইল নম্বর (Phone)</label>
+            <input type="text" id="inputPhone" placeholder="যেমন: 01711-XXXXXX" 
               class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
           </div>
         </div>
@@ -365,7 +403,72 @@
   </div>
 
 
-  <!-- MODAL 2: Firebase Configuration Modal -->
+  <!-- MODAL 2: Total Clients Directory Modal -->
+  <div id="clientsModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-100 overflow-hidden my-8">
+      
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <h3 class="text-base font-bold flex items-center gap-2">
+          <i class="fa-solid fa-address-book text-brand-400"></i>
+          <span>সকল ক্লায়েন্ট তালিকা</span>
+        </h3>
+        <button onclick="closeClientsModal()" class="text-slate-400 hover:text-white text-lg transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <p class="text-xs text-slate-500">যে ক্লায়েন্টের নাম-এ ক্লিক করবেন তার সকল মামলা ও ফাইলের তথ্য ফিল্টার হয়ে পেজে চলে আসবে:</p>
+        
+        <div id="clientsModalList" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-1">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="flex justify-end pt-3 border-t border-slate-100">
+          <button onclick="closeClientsModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+            বন্ধ করুন
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL 3: Total Due Breakdown Modal -->
+  <div id="dueModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-100 overflow-hidden my-8">
+      
+      <div class="bg-rose-900 text-white px-6 py-4 flex items-center justify-between">
+        <h3 class="text-base font-bold flex items-center gap-2">
+          <i class="fa-solid fa-wallet text-rose-300"></i>
+          <span>বকেয়া টাকার তালিকা (Due Summary)</span>
+        </h3>
+        <button onclick="closeDueModal()" class="text-slate-400 hover:text-white text-lg transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div class="bg-rose-50 border border-rose-200 rounded-xl p-3 flex items-center justify-between text-rose-800 text-xs">
+          <span>কার কত টাকা বকেয়া রয়েছে তার বিস্তারিত তালিকা:</span>
+          <span id="dueModalGrandTotal" class="font-extrabold text-sm text-rose-700"></span>
+        </div>
+        
+        <div id="dueModalList" class="space-y-2.5 max-h-96 overflow-y-auto p-1">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="flex justify-end pt-3 border-t border-slate-100">
+          <button onclick="closeDueModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+            বন্ধ করুন
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL 4: Firebase Configuration Modal -->
   <div id="firebaseModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-100 overflow-hidden my-8">
       
@@ -418,6 +521,7 @@
         id: 'seed-sunny-1',
         date: '2026-10-04',
         name: 'Sunny',
+        phone: '01711-445566',
         cases: [
           { caseNo: '4451', appNo: '16985069', status: 'completed' },
           { caseNo: '4758', appNo: '17096011', status: 'completed' },
@@ -432,6 +536,7 @@
         id: 'seed-emon-1',
         date: '2026-10-01',
         name: 'Emon',
+        phone: '01822-998877',
         cases: [
           { caseNo: '4520', appNo: '16993647', status: 'pending' },
           { caseNo: '4498', appNo: '16991863', status: 'pending' },
@@ -523,6 +628,7 @@
               liveRecords.push({ id: doc.id, ...doc.data() });
             });
             records = liveRecords;
+            populateClientDatalist();
             renderData();
           }, (error) => {
             console.error("Firebase Snapshot error:", error);
@@ -566,6 +672,7 @@
         records = INITIAL_DATA;
         saveToLocalStorage();
       }
+      populateClientDatalist();
       renderData();
     }
 
@@ -600,6 +707,7 @@
           records.unshift(newRecord);
         }
         saveToLocalStorage();
+        populateClientDatalist();
         renderData();
       }
     }
@@ -634,6 +742,7 @@
       } else {
         records = records.filter(r => r.id !== id);
         saveToLocalStorage();
+        populateClientDatalist();
         renderData();
       }
     }
@@ -674,21 +783,75 @@
       renderData();
     }
 
+    // --- AUTOCOMPLETE & DATALIST ---
+    function populateClientDatalist() {
+      const datalist = document.getElementById('existingClientsList');
+      if (!datalist) return;
+
+      const uniqueClients = new Map();
+      records.forEach(r => {
+        if (r.name && r.name.trim() && !uniqueClients.has(r.name.trim().toLowerCase())) {
+          uniqueClients.set(r.name.trim().toLowerCase(), { name: r.name.trim(), phone: r.phone || '' });
+        }
+      });
+
+      datalist.innerHTML = Array.from(uniqueClients.values()).map(c => 
+        `<option value="${c.name}">${c.phone ? `${c.name} (${c.phone})` : c.name}</option>`
+      ).join('');
+    }
+
+    function autoFillClientPhone() {
+      const nameVal = document.getElementById('inputName').value.trim().toLowerCase();
+      const phoneInput = document.getElementById('inputPhone');
+      
+      const match = records.find(r => r.name && r.name.trim().toLowerCase() === nameVal);
+      if (match && match.phone) {
+        phoneInput.value = match.phone;
+      }
+    }
+
+    function filterByClientName(name) {
+      document.getElementById('searchInput').value = name;
+      closeClientsModal();
+      renderData();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      renderData();
+    }
+
+
     // --- RENDER & CALCULATIONS ---
     function renderData() {
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
       const filter = document.getElementById('filterStatus').value;
 
-      // Count active vs archived
-      let allCount = records.length;
+      // Show/Hide Clear Search Button & Notification
+      const clearBtn = document.getElementById('clearSearchBtn');
+      const searchNotif = document.getElementById('searchFilterNotification');
+      if (search) {
+        clearBtn.classList.remove('hidden');
+        searchNotif.classList.remove('hidden');
+        document.getElementById('searchFilterText').innerText = `"${search}"`;
+      } else {
+        clearBtn.classList.add('hidden');
+        searchNotif.classList.add('hidden');
+      }
+
+      // Count active vs archived & unique clients
+      const clientNamesSet = new Set();
       let activeCount = 0;
       let archiveCount = 0;
+
       records.forEach(r => {
+        if (r.name && r.name.trim()) clientNamesSet.add(r.name.trim().toLowerCase());
         if (isRecordArchived(r)) archiveCount++;
         else activeCount++;
       });
 
-      document.getElementById('badgeAllCount').innerText = allCount;
+      document.getElementById('statTotalClients').innerText = clientNamesSet.size;
+      document.getElementById('badgeAllCount').innerText = records.length;
       document.getElementById('badgeActiveCount').innerText = activeCount;
       document.getElementById('badgeArchiveCount').innerText = archiveCount;
 
@@ -703,12 +866,13 @@
       // Filter based on search & payment status
       const filtered = tabFiltered.filter(item => {
         const nameMatch = item.name ? item.name.toLowerCase().includes(search) : false;
+        const phoneMatch = item.phone ? item.phone.toLowerCase().includes(search) : false;
         const caseMatch = item.cases ? item.cases.some(c => 
           (c.caseNo && c.caseNo.toString().toLowerCase().includes(search)) || 
           (c.appNo && c.appNo.toString().toLowerCase().includes(search))
         ) : false;
         
-        const matchesSearch = !search || nameMatch || caseMatch;
+        const matchesSearch = !search || nameMatch || phoneMatch || caseMatch;
 
         let matchesFilter = true;
         if (filter === 'due') matchesFilter = item.due > 0;
@@ -718,40 +882,28 @@
         return matchesSearch && matchesFilter;
       });
 
-      // Update Summary Analytics Stats (Global across active & archive)
-      let totalClients = records.length;
+      // Calculate Financial Analytics (Separate Total Due vs Total Advance)
       let totalCasesCount = 0;
       let grandTotal = 0;
       let grandPaid = 0;
-      let grandDue = 0;
+      let positiveDueTotal = 0; // Sum of only due > 0
+      let advanceTotal = 0;     // Sum of only due < 0
 
       records.forEach(r => {
         totalCasesCount += (r.cases ? r.cases.length : 0);
         grandTotal += Number(r.total || 0);
         grandPaid += Number(r.paid || 0);
-        grandDue += Number(r.due || 0);
+        
+        const d = Number(r.due || 0);
+        if (d > 0) positiveDueTotal += d;
+        if (d < 0) advanceTotal += Math.abs(d);
       });
 
-      document.getElementById('statTotalClients').innerText = totalClients;
       document.getElementById('statTotalCases').innerText = totalCasesCount;
       document.getElementById('statTotalAmount').innerText = '৳' + grandTotal.toLocaleString('en-IN');
       document.getElementById('statTotalPaid').innerText = '৳' + grandPaid.toLocaleString('en-IN');
-
-      const dueElem = document.getElementById('statTotalDue');
-      const dueSubElem = document.getElementById('statTotalDueSub');
-      if (grandDue > 0) {
-        dueElem.innerText = '৳' + grandDue.toLocaleString('en-IN');
-        dueElem.className = 'text-xl sm:text-2xl font-bold text-rose-600';
-        dueSubElem.innerText = 'মোট বাকি টাকা';
-      } else if (grandDue < 0) {
-        dueElem.innerText = '৳' + Math.abs(grandDue).toLocaleString('en-IN');
-        dueElem.className = 'text-xl sm:text-2xl font-bold text-emerald-600';
-        dueSubElem.innerText = 'অতিরিক্ত এডভান্স জমা';
-      } else {
-        dueElem.innerText = '৳0';
-        dueElem.className = 'text-xl sm:text-2xl font-bold text-slate-800';
-        dueSubElem.innerText = 'কোন বকেয়া নেই';
-      }
+      document.getElementById('statTotalDue').innerText = '৳' + positiveDueTotal.toLocaleString('en-IN');
+      document.getElementById('statTotalAdvance').innerText = '৳' + advanceTotal.toLocaleString('en-IN');
 
       // Empty State Check
       const emptyState = document.getElementById('emptyState');
@@ -769,7 +921,7 @@
 
       // Render Desktop Table Body (Excel Spreadsheet Multi-Row Style)
       let tableRowsHtml = '';
-      filtered.forEach((item, itemIdx) => {
+      filtered.forEach((item) => {
         const cases = (item.cases && item.cases.length > 0) ? item.cases : [{ caseNo: '-', appNo: '-', status: 'pending' }];
         const caseCount = cases.length;
         const isArchived = isRecordArchived(item);
@@ -818,13 +970,14 @@
                   ${formatDate(item.date)}
                 </td>
                 <td rowspan="${caseCount}" class="align-top py-3.5 px-4 font-bold text-slate-800 whitespace-nowrap border-r border-slate-200 border-b-2 border-b-slate-300 bg-slate-50/50">
-                  <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full ${isArchived ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'} font-bold text-xs flex items-center justify-center">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-full ${isArchived ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'} font-bold text-xs flex items-center justify-center shadow-xs">
                       ${(item.name || 'C')[0].toUpperCase()}
                     </div>
                     <div>
-                      <span class="text-sm font-bold">${item.name || '-'}</span>
-                      ${isArchived ? '<span class="ml-2 text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">আর্কাইভড</span>' : ''}
+                      <span class="text-sm font-bold text-slate-900 block">${item.name || '-'}</span>
+                      ${item.phone ? `<a href="tel:${item.phone}" class="text-xs text-brand-600 hover:underline flex items-center gap-1 font-normal"><i class="fa-solid fa-phone text-[10px]"></i> ${item.phone}</a>` : '<span class="text-xs text-slate-400 font-normal">নম্বর নেই</span>'}
+                      ${isArchived ? '<span class="mt-1 inline-block text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">আর্কাইভড</span>' : ''}
                     </div>
                   </div>
                 </td>
@@ -931,7 +1084,7 @@
           <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
               <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full ${isArchived ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'} font-bold text-xs flex items-center justify-center">
+                <div class="w-9 h-9 rounded-full ${isArchived ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'} font-bold text-xs flex items-center justify-center">
                   ${(item.name || 'C')[0].toUpperCase()}
                 </div>
                 <div>
@@ -939,7 +1092,10 @@
                     <span>${item.name || '-'}</span>
                     ${isArchived ? '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">আর্কাইভড</span>' : ''}
                   </h4>
-                  <span class="text-xs text-slate-400">${formatDate(item.date)}</span>
+                  <div class="flex items-center gap-2 text-xs text-slate-400">
+                    <span>${formatDate(item.date)}</span>
+                    ${item.phone ? `<span>•</span><a href="tel:${item.phone}" class="text-brand-600 font-semibold"><i class="fa-solid fa-phone text-[10px]"></i> ${item.phone}</a>` : ''}
+                  </div>
                 </div>
               </div>
               <div>${dueStatusBadge}</div>
@@ -975,7 +1131,6 @@
         `;
       }).join('');
 
-      // Re-apply admin column visibility
       if (isAdminMode) {
         document.querySelectorAll('.admin-col').forEach(col => col.classList.remove('hidden'));
       }
@@ -988,6 +1143,7 @@
       document.getElementById('recordId').value = '';
       document.getElementById('inputDate').valueAsDate = new Date();
       document.getElementById('inputName').value = '';
+      document.getElementById('inputPhone').value = '';
       document.getElementById('inputTotal').value = 0;
       document.getElementById('inputPaid').value = 0;
       document.getElementById('inputDue').value = 0;
@@ -1003,10 +1159,11 @@
       const record = records.find(r => r.id === id);
       if (!record) return;
 
-      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-brand-500"></i> <span>এন্ট্রি ও মামলা তথ্য সংশোধেন (Edit)</span>';
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-brand-500"></i> <span>এন্ট্রি, মোবাইল নম্বর ও মামলা সংশোধেন (Edit)</span>';
       document.getElementById('recordId').value = record.id;
       document.getElementById('inputDate').value = record.date || '';
       document.getElementById('inputName').value = record.name || '';
+      document.getElementById('inputPhone').value = record.phone || '';
       document.getElementById('inputTotal').value = record.total || 0;
       document.getElementById('inputPaid').value = record.paid || 0;
       document.getElementById('inputDue').value = record.due || 0;
@@ -1074,6 +1231,7 @@
       const recordId = document.getElementById('recordId').value;
       const date = document.getElementById('inputDate').value;
       const name = document.getElementById('inputName').value.trim();
+      const phone = document.getElementById('inputPhone').value.trim();
       const total = Number(document.getElementById('inputTotal').value || 0);
       const paid = Number(document.getElementById('inputPaid').value || 0);
       const due = total - paid;
@@ -1097,6 +1255,7 @@
       const dataPayload = {
         date,
         name,
+        phone,
         cases,
         total,
         paid,
@@ -1105,6 +1264,121 @@
 
       await persistRecord(dataPayload, recordId || null);
       closeRecordModal();
+    }
+
+
+    // --- CLIENTS DIRECTORY MODAL ---
+    function openClientsModal() {
+      const modalList = document.getElementById('clientsModalList');
+      
+      const clientMap = new Map();
+      records.forEach(r => {
+        const key = (r.name || 'Unknown').trim().toLowerCase();
+        if (!clientMap.has(key)) {
+          clientMap.set(key, {
+            name: r.name || 'Unknown',
+            phone: r.phone || '',
+            entriesCount: 0,
+            casesCount: 0,
+            total: 0,
+            paid: 0,
+            due: 0
+          });
+        }
+        const clientObj = clientMap.get(key);
+        if (!clientObj.phone && r.phone) clientObj.phone = r.phone;
+        clientObj.entriesCount++;
+        clientObj.casesCount += (r.cases ? r.cases.length : 0);
+        clientObj.total += Number(r.total || 0);
+        clientObj.paid += Number(r.paid || 0);
+        clientObj.due += Number(r.due || 0);
+      });
+
+      const uniqueList = Array.from(clientMap.values());
+
+      if (uniqueList.length === 0) {
+        modalList.innerHTML = `<div class="col-span-2 text-center py-6 text-slate-400">কোন ক্লায়েন্ট পাওয়া যায়নি</div>`;
+      } else {
+        modalList.innerHTML = uniqueList.map(c => `
+          <div onclick="filterByClientName('${c.name}')" 
+            class="bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 p-3.5 rounded-2xl cursor-pointer transition flex items-center justify-between group">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-700 font-bold text-sm flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition">
+                ${c.name[0].toUpperCase()}
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 group-hover:text-brand-700 text-sm">${c.name}</h4>
+                <p class="text-xs text-slate-500">${c.phone ? `<i class="fa-solid fa-phone text-[10px] text-slate-400"></i> ${c.phone}` : 'নম্বর নেই'}</p>
+                <div class="text-[11px] text-slate-400 mt-0.5">${c.casesCount} টি মামলা</div>
+              </div>
+            </div>
+            <div class="text-right">
+              ${c.due > 0 
+                ? `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-700">বকেয়া ৳${c.due.toLocaleString('en-IN')}</span>`
+                : (c.due < 0 
+                  ? `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-700">এডভান্স ৳${Math.abs(c.due).toLocaleString('en-IN')}</span>`
+                  : `<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-200 text-slate-600">পরিশোধিত</span>`
+                )
+              }
+              <div class="text-[10px] text-brand-600 font-semibold mt-1.5 flex items-center justify-end gap-1 group-hover:underline">
+                <span>ফাইল দেখুন</span> <i class="fa-solid fa-angle-right"></i>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('clientsModal').classList.remove('hidden');
+    }
+
+    function closeClientsModal() {
+      document.getElementById('clientsModal').classList.add('hidden');
+    }
+
+
+    // --- DUE BREAKDOWN MODAL ---
+    function openDueModal() {
+      const modalList = document.getElementById('dueModalList');
+      const grandElem = document.getElementById('dueModalGrandTotal');
+
+      const dueRecords = records.filter(r => r.due > 0);
+      let grandDue = 0;
+
+      if (dueRecords.length === 0) {
+        grandElem.innerText = 'সর্বমোট বকেয়া: ৳0';
+        modalList.innerHTML = `<div class="text-center py-6 text-slate-400">কারো কোন বকেয়া নেই! 🎉</div>`;
+      } else {
+        dueRecords.forEach(r => grandDue += Number(r.due));
+        grandElem.innerText = `সর্বমোট বকেয়া: ৳${grandDue.toLocaleString('en-IN')}`;
+
+        modalList.innerHTML = dueRecords.map(r => `
+          <div class="bg-white p-3.5 rounded-xl border border-rose-100 shadow-2xs flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-rose-100 text-rose-700 font-bold text-xs flex items-center justify-center">
+                ${(r.name || 'C')[0].toUpperCase()}
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm">${r.name || '-'}</h4>
+                <p class="text-xs text-slate-500">${r.phone ? `<a href="tel:${r.phone}" class="text-brand-600 font-semibold hover:underline"><i class="fa-solid fa-phone text-[10px]"></i> ${r.phone}</a>` : 'নম্বর নেই'}</p>
+                <span class="text-[11px] text-slate-400">তারিখ: ${formatDate(r.date)} • ${(r.cases || []).length}টি কেস</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-extrabold text-rose-600">৳${Number(r.due).toLocaleString('en-IN')} বাকি</div>
+              <div class="text-[11px] text-slate-400">মোট: ৳${Number(r.total).toLocaleString('en-IN')} | জমা: ৳${Number(r.paid).toLocaleString('en-IN')}</div>
+              <button onclick="filterByClientName('${r.name}')" class="mt-1 text-[11px] bg-rose-50 text-rose-700 hover:bg-rose-100 px-2 py-0.5 rounded font-semibold transition">
+                ফাইল দেখুন ➔
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('dueModal').classList.remove('hidden');
+    }
+
+    function closeDueModal() {
+      document.getElementById('dueModal').classList.add('hidden');
     }
 
 
@@ -1162,18 +1436,18 @@
         return;
       }
 
-      let csv = 'Date,Name,Case No,Application No,Status,Total,Paid,Due\n';
+      let csv = 'Date,Name,Phone,Case No,Application No,Status,Total,Paid,Due\n';
       records.forEach(r => {
         const cases = r.cases || [];
         if (cases.length === 0) {
-          csv += `"${r.date}","${r.name}","","","","${r.total}","${r.paid}","${r.due}"\n`;
+          csv += `"${r.date}","${r.name}","${r.phone || ''}","","","","${r.total}","${r.paid}","${r.due}"\n`;
         } else {
           cases.forEach((c, i) => {
             const statusBn = (c.status === 'completed') ? 'হয়েছে' : 'হয়নি';
             if (i === 0) {
-              csv += `"${r.date}","${r.name}","${c.caseNo || ''}","${c.appNo || ''}","${statusBn}","${r.total}","${r.paid}","${r.due}"\n`;
+              csv += `"${r.date}","${r.name}","${r.phone || ''}","${c.caseNo || ''}","${c.appNo || ''}","${statusBn}","${r.total}","${r.paid}","${r.due}"\n`;
             } else {
-              csv += `"","","${c.caseNo || ''}","${c.appNo || ''}","${statusBn}","","",""\n`;
+              csv += `"","","","${c.caseNo || ''}","${c.appNo || ''}","${statusBn}","","",""\n`;
             }
           });
         }
