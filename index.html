@@ -616,47 +616,11 @@
       return item.cases.every(c => c.status === 'completed');
     }
 
-    // --- FIREBASE & STORAGE ENGINE ---
-    function initFirebase() {
-      let config = DEFAULT_FIREBASE_CONFIG;
-      const savedConfig = localStorage.getItem('firebase_config');
-      if (savedConfig) {
-        try {
-          config = JSON.parse(savedConfig);
-        } catch (e) {
-          console.error("Firebase config parse error", e);
-        }
-      }
 
-      if (config && config.apiKey && config.projectId) {
-        try {
-          if (!firebase.apps.length) {
-            firebase.initializeApp(config);
-          }
-          db = firebase.firestore();
-          isFirebaseActive = true;
-          updateStatusBanner(true, 'Firebase ক্লাউড ডাটাবেজ কানেক্টেড (smartcasebd-4f9a6)', 'তথ্য সয়ংক্রিয়ভাবে ক্লাউড ডাটাবেজে সেভ হচ্ছে।', 'bg-emerald-50 text-emerald-800 border-emerald-200', 'fa-circle-check text-emerald-600');
-          
-          // Listen to real-time updates from Firebase
-          db.collection('cases').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
-            const liveRecords = [];
-            snapshot.forEach((doc) => {
-              liveRecords.push({ id: doc.id, ...doc.data() });
-            });
-            records = liveRecords;
-            populateClientDatalist();
-            renderData();
-          }, (error) => {
-            console.error("Firebase Snapshot error:", error);
-            fallbackToLocalStorage();
-          });
-          return;
-        } catch (err) {
-          console.error("Firebase init failed:", err);
-        }
-      }
-      fallbackToLocalStorage();
-    }
+
+
+
+    
 
     function fallbackToLocalStorage() {
       isFirebaseActive = false;
