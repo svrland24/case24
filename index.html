@@ -635,7 +635,7 @@
           }
           db = firebase.firestore();
           isFirebaseActive = true;
-          updateStatusBanner(true, 'Firebase ক্লাউড ডাটাবেজ কানেক্টেড (smartcasebd-4f9a6)', 'তথ্য সয়ংক্রিয়ভাবে ক্লাউড ডাটাবেজে সেভ হচ্ছে।', 'bg-emerald-50 text-emerald-800 border-emerald-200', 'fa-circle-check text-emerald-600');
+          updateStatusBanner(true, 'Connected', ' ', 'bg-emerald-50 text-emerald-800 border-emerald-200', 'fa-circle-check text-emerald-600');
           
           // Listen to real-time updates from Firebase
           db.collection('cases').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
