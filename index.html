@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>মামলা ও পেমেন্ট ম্যানেজমেন্ট ড্যাশবোর্ড</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Hind Siliguri -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase Web SDK (v9/v10 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Hind Siliguri"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Hind Siliguri', sans-serif;
+      background-color: #f8fafc;
+    }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Header / Navigation Bar -->
+  <header class="bg-gradient-to-r from-slate-900 via-brand-800 to-slate-900 text-white shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Logo & Title -->
+      <div class="flex items-center space-x-3 space-x-reverse">
+        <div class="bg-brand-500 p-2.5 rounded-xl shadow-md flex items-center justify-center">
+          <i class="fa-solid fa-scale-balanced text-xl text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold tracking-wide">মামলা ও পেমেন্ট পোর্টাল</h1>
+          <p class="text-xs text-slate-300 font-light hidden sm:block">Case & Payment Management Dashboard</p>
+        </div>
+      </div>
+
+      <!-- Mode Switch & Controls -->
+      <div class="flex items-center space-x-2 sm:space-x-4">
+        
+        <!-- Mode Badge -->
+        <div id="modeBadge" class="px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="modeBadgeText">ভিউ মোড (View Mode)</span>
+        </div>
+
+        <!-- Mode Toggle Button -->
+        <button id="toggleModeBtn" onclick="toggleAdminMode()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs sm:text-sm font-medium border border-slate-700 flex items-center gap-2 transition shadow-sm active:scale-95">
+          <i id="toggleModeIcon" class="fa-solid fa-user-shield text-amber-400"></i>
+          <span id="toggleModeBtnText">এডমিন মোড চালু করুন</span>
+        </button>
+
+        <!-- Firebase Config Button -->
+        <button onclick="openFirebaseModal()" title="Firebase কনফিগারেশন" class="p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-sm border border-slate-700 transition">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Firebase Connection Banner Status -->
+    <div id="firebaseStatusBanner" class="hidden rounded-xl p-4 border text-sm flex items-center justify-between shadow-sm">
+      <div class="flex items-center gap-3">
+        <i id="dbStatusIcon" class="fa-solid text-lg"></i>
+        <div>
+          <span id="dbStatusTitle" class="font-bold"></span>
+          <p id="dbStatusSub" class="text-xs opacity-90"></p>
+        </div>
+      </div>
+      <button onclick="openFirebaseModal()" class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-md font-semibold transition">
+        সেটিংস
+      </button>
+    </div>
+
+    <!-- Analytics / Stat Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      
+      <!-- Card 1: Total Cases -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between text-slate-500 mb-2">
+          <span class="text-xs sm:text-sm font-medium">মোট ক্লায়েন্ট</span>
+          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-users"></i>
+          </div>
+        </div>
+        <div id="statTotalClients" class="text-xl sm:text-2xl font-bold text-slate-900">0</div>
+        <div class="text-xs text-slate-400 mt-1"><span id="statTotalCases">0</span> টি মোট মামলা</div>
+      </div>
+
+      <!-- Card 2: Total Contract / Amount -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between text-slate-500 mb-2">
+          <span class="text-xs sm:text-sm font-medium">মোট চুক্তি (Total)</span>
+          <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+          </div>
+        </div>
+        <div id="statTotalAmount" class="text-xl sm:text-2xl font-bold text-slate-900">৳0</div>
+        <div class="text-xs text-slate-400 mt-1">দাবিকৃত মোট পরিমাণ</div>
+      </div>
+
+      <!-- Card 3: Total Paid -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between text-slate-500 mb-2">
+          <span class="text-xs sm:text-sm font-medium">মোট জমা (Paid)</span>
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+        </div>
+        <div id="statTotalPaid" class="text-xl sm:text-2xl font-bold text-emerald-600">৳0</div>
+        <div class="text-xs text-slate-400 mt-1">আদায়কিত পরিশোধ</div>
+      </div>
+
+      <!-- Card 4: Total Due -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between text-slate-500 mb-2">
+          <span class="text-xs sm:text-sm font-medium">মোট বকেয়া (Due)</span>
+          <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+        </div>
+        <div id="statTotalDue" class="text-xl sm:text-2xl font-bold text-slate-900">৳0</div>
+        <div id="statTotalDueSub" class="text-xs text-slate-400 mt-1">নিট ব্যালেন্স</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs (All, Active, Archive) -->
+    <div class="flex items-center justify-between border-b border-slate-200 pb-1">
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        
+        <!-- Tab 1: All Files -->
+        <button id="tabAllBtn" onclick="switchTab('all')" 
+          class="px-3.5 py-2 font-bold text-xs sm:text-sm rounded-xl flex items-center gap-2 transition bg-brand-600 text-white shadow-sm">
+          <i class="fa-solid fa-folder"></i>
+          <span>সকল ফাইল</span>
+          <span id="badgeAllCount" class="px-2 py-0.5 text-xs rounded-full bg-white/20 text-white font-extrabold">0</span>
+        </button>
+
+        <!-- Tab 2: Active Files -->
+        <button id="tabActiveBtn" onclick="switchTab('active')" 
+          class="px-3.5 py-2 font-bold text-xs sm:text-sm rounded-xl flex items-center gap-2 transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+          <i class="fa-solid fa-hourglass-half text-amber-600"></i>
+          <span>চলমান ফাইল</span>
+          <span id="badgeActiveCount" class="px-2 py-0.5 text-xs rounded-full bg-slate-200 text-slate-700 font-extrabold">0</span>
+        </button>
+
+        <!-- Tab 3: Archive Files -->
+        <button id="tabArchiveBtn" onclick="switchTab('archive')" 
+          class="px-3.5 py-2 font-bold text-xs sm:text-sm rounded-xl flex items-center gap-2 transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+          <i class="fa-solid fa-box-archive text-emerald-600"></i>
+          <span>আর্কাইভ (সম্পন্ন)</span>
+          <span id="badgeArchiveCount" class="px-2 py-0.5 text-xs rounded-full bg-slate-200 text-slate-700 font-extrabold">0</span>
+        </button>
+
+      </div>
+
+      <div class="hidden md:block text-xs text-slate-500 italic">
+        * এক্সেলের মত প্রতিটি কেস আলাদা সারিতে (Row) প্রদর্শিত হচ্ছে।
+      </div>
+    </div>
+
+    <!-- Search & Control Toolbar -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+      
+      <!-- Search Box -->
+      <div class="relative w-full md:w-96">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+        <input type="text" id="searchInput" oninput="renderData()" placeholder="নাম, মামলা বা অ্যাপ্লিকেশন নং দিয়ে খুঁজুন..." 
+          class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+      </div>
+
+      <!-- Filter & Action Buttons -->
+      <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+        
+        <!-- Filter Dropdown -->
+        <select id="filterStatus" onchange="renderData()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <option value="all">সকল এন্ট্রি</option>
+          <option value="due">বকেয়া আছে (Due > 0)</option>
+          <option value="advance">অতিরিক্ত জমা (Advance < 0)</option>
+          <option value="cleared">পরিশোধিত (Due = 0)</option>
+        </select>
+
+        <!-- Admin Only: Add Button -->
+        <button id="addEntryBtn" onclick="openAddModal()" class="hidden px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold shadow-sm hover:shadow transition flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i>
+          <span>নতুন এন্ট্রি</span>
+        </button>
+
+        <!-- Export CSV Button -->
+        <button onclick="exportToCSV()" title="Excel/CSV ডাউনলোড" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm transition">
+          <i class="fa-solid fa-file-excel text-emerald-600"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Data Display Section -->
+    
+    <!-- Admin Notice (Visible only in Admin Mode) -->
+    <div id="adminNotice" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs sm:text-sm flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-user-gear text-amber-600"></i>
+        <span><strong>এডমিন মোড সক্রিয়:</strong> নাম/মামলা এডিট করতে ✏️ পেন্সিল আইকনে ক্লিক করুন এবং স্ট্যাটাস পরিবর্তন করতে সরাসরি 🟢/🔴 বাটনে ক্লিক করুন।</span>
+      </div>
+    </div>
+
+    <!-- Desktop Table View (Excel Sheet Row Spanning Style) -->
+    <div class="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-100 border-b border-slate-300 text-xs font-bold text-slate-700 uppercase tracking-wider">
+            <th class="py-3 px-4 border-r border-slate-200">তারিখ</th>
+            <th class="py-3 px-4 border-r border-slate-200">ক্লায়েন্টের নাম</th>
+            <th class="py-3 px-4 border-r border-slate-200">মামলা নং (Case)</th>
+            <th class="py-3 px-4 border-r border-slate-200">আবেদন নং (App)</th>
+            <th class="py-3 px-4 border-r border-slate-200 text-center">কেস স্ট্যাটাস</th>
+            <th class="py-3 px-4 border-r border-slate-200 text-right">মোট (Total)</th>
+            <th class="py-3 px-4 border-r border-slate-200 text-right">জমা (Paid)</th>
+            <th class="py-3 px-4 border-r border-slate-200 text-right">বকেয়া (Due)</th>
+            <th class="admin-col hidden py-3 px-4 text-center">অ্যাকশন</th>
+          </tr>
+        </thead>
+        <tbody id="desktopTableBody" class="divide-y divide-slate-200 text-sm">
+          <!-- Rows rendered by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div id="mobileCardContainer" class="block md:hidden space-y-4">
+      <!-- Cards rendered by JS -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden py-12 text-center bg-white rounded-2xl border border-slate-200/80">
+      <div class="w-16 h-16 mx-auto mb-3 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-folder-open"></i>
+      </div>
+      <h3 id="emptyStateTitle" class="text-base font-semibold text-slate-700">কোন ডাটা পাওয়া যায়নি</h3>
+      <p class="text-xs text-slate-400 mt-1">অনুগ্রহ করে সার্চ ফিল্টার চেক করুন অথবা নতুন ডাটা এন্ট্রি দিন।</p>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+    <p>© 2026 মামলা ও পেমেন্ট সিস্টেম • মোবাইল ও ডেক্সটপ ফ্রেন্ডলি পোর্টাল</p>
+  </footer>
+
+
+  <!-- MODAL 1: Add / Edit Record Modal -->
+  <div id="recordModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-100 overflow-hidden my-8 animate-in fade-in zoom-in duration-200">
+      
+      <!-- Modal Header -->
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <h3 id="modalTitle" class="text-lg font-bold flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-brand-500"></i>
+          <span>নতুন মামলা এন্ট্রি দিন</span>
+        </h3>
+        <button onclick="closeRecordModal()" class="text-slate-400 hover:text-white text-lg transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Form -->
+      <form id="recordForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
+        <input type="hidden" id="recordId">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Date Field -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">তারিখ (Date) *</label>
+            <input type="date" id="inputDate" required 
+              class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+
+          <!-- Name Field -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">ক্লায়েন্টের নাম (Name) *</label>
+            <input type="text" id="inputName" required placeholder="যেমন: Sunny, Emon..." 
+              class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Cases and Application List -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-xs font-semibold text-slate-600">মামলা, আবেদন নং ও স্ট্যাটাস *</label>
+            <button type="button" onclick="addCaseRow()" class="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-circle-plus"></i> আরও যোগ করুন
+            </button>
+          </div>
+          
+          <div id="caseRowsContainer" class="space-y-2 max-h-56 overflow-y-auto p-1">
+            <!-- Dynamic Case Rows Added by JS -->
+          </div>
+        </div>
+
+        <!-- Amounts Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">মোট চুক্তি (Total ৳)</label>
+            <input type="number" id="inputTotal" value="0" min="0" oninput="calculateDue()"
+              class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">জমা দিয়েছে (Paid ৳)</label>
+            <input type="number" id="inputPaid" value="0" min="0" oninput="calculateDue()"
+              class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">বকেয়া (Due ৳)</label>
+            <input type="number" id="inputDue" readonly value="0" 
+              class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-xl text-sm font-bold text-slate-700">
+          </div>
+        </div>
+
+        <!-- Form Buttons -->
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="closeRecordModal()" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-50 transition">
+            বাতিল
+          </button>
+          <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold shadow transition flex items-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>সংরক্ষণ করুন</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- MODAL 2: Firebase Configuration Modal -->
+  <div id="firebaseModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-100 overflow-hidden my-8">
+      
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <h3 class="text-base font-bold flex items-center gap-2">
+          <i class="fa-solid fa-fire text-amber-500"></i>
+          <span>Firebase ডাটাবেজ সেটআপ</span>
+        </h3>
+        <button onclick="closeFirebaseModal()" class="text-slate-400 hover:text-white text-lg transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-sm">
+        <p class="text-xs text-slate-500 leading-relaxed">
+          আপনার ক্লাউড ডাটাবেজে তথ্য সেভ করার জন্য Firebase Config তথ্য দিন।
+        </p>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Firebase Config JSON Object</label>
+          <textarea id="firebaseConfigJson" rows="6" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "your-app.firebaseapp.com",
+  "projectId": "your-app-id",
+  "storageBucket": "your-app.appspot.com",
+  "messagingSenderId": "123456...",
+  "appId": "1:123456..."
+}' class="w-full p-3 font-mono text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+          <button onclick="clearFirebaseConfig()" class="text-xs text-rose-600 hover:underline">
+            কনফিগ মুছে দিন (অফলাইন মোড)
+          </button>
+          <div class="flex gap-2">
+            <button onclick="closeFirebaseModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-medium">বাতিল</button>
+            <button onclick="saveFirebaseConfig()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700">সংরক্ষণ করুন</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- APPLICATION JAVASCRIPT -->
+  <script>
+    // Initial Spreadsheet Sample Data (Default Seed)
+    const INITIAL_DATA = [
+      {
+        id: 'seed-sunny-1',
+        date: '2026-10-04',
+        name: 'Sunny',
+        cases: [
+          { caseNo: '4451', appNo: '16985069', status: 'completed' },
+          { caseNo: '4758', appNo: '17096011', status: 'completed' },
+          { caseNo: '5246', appNo: '17184001', status: 'pending' }
+        ],
+        total: 15000,
+        paid: 10000,
+        due: 5000,
+        createdAt: Date.now() - 86400000
+      },
+      {
+        id: 'seed-emon-1',
+        date: '2026-10-01',
+        name: 'Emon',
+        cases: [
+          { caseNo: '4520', appNo: '16993647', status: 'pending' },
+          { caseNo: '4498', appNo: '16991863', status: 'pending' },
+          { caseNo: '4185', appNo: '16943449', status: 'pending' },
+          { caseNo: '4085', appNo: '16922545', status: 'pending' },
+          { caseNo: '4649', appNo: '17078663', status: 'pending' },
+          { caseNo: '4087', appNo: '16925175', status: 'pending' },
+          { caseNo: '4493', appNo: '16991273', status: 'pending' }
+        ],
+        total: 35000,
+        paid: 40000,
+        due: -5000,
+        createdAt: Date.now() - 172800000
+      }
+    ];
+
+    // Firebase Config (Pre-configured)
+    const DEFAULT_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCGKwYbdBMpawt8p9snIvswobEFT9Dk3L8",
+      authDomain: "smartcasebd-4f9a6.firebaseapp.com",
+      projectId: "smartcasebd-4f9a6",
+      storageBucket: "smartcasebd-4f9a6.firebasestorage.app",
+      messagingSenderId: "907795858740",
+      appId: "1:907795858740:web:06f98c27a7a47a18a95161",
+      measurementId: "G-7ZMG1N3XWR"
+    };
+
+    // Global State
+    let isAdminMode = false; // Default: View Mode
+    let currentTab = 'all'; // 'all', 'active', or 'archive'
+    let isFirebaseActive = false;
+    let db = null;
+    let records = [];
+
+    // Initialize App
+    document.addEventListener('DOMContentLoaded', () => {
+      initFirebase();
+      loadData();
+      updateAdminUI();
+    });
+
+    // --- TAB SWITCHING ENGINE ---
+    function switchTab(tabName) {
+      currentTab = tabName;
+      const allBtn = document.getElementById('tabAllBtn');
+      const activeBtn = document.getElementById('tabActiveBtn');
+      const archiveBtn = document.getElementById('tabArchiveBtn');
+
+      const activeStyle = "px-3.5 py-2 font-bold text-xs sm:text-sm rounded-xl flex items-center gap-2 transition bg-brand-600 text-white shadow-sm";
+      const inactiveStyle = "px-3.5 py-2 font-bold text-xs sm:text-sm rounded-xl flex items-center gap-2 transition bg-slate-100 text-slate-600 hover:bg-slate-200";
+
+      allBtn.className = (tabName === 'all') ? activeStyle : inactiveStyle;
+      activeBtn.className = (tabName === 'active') ? activeStyle : inactiveStyle;
+      archiveBtn.className = (tabName === 'archive') ? activeStyle : inactiveStyle;
+
+      renderData();
+    }
+
+    function isRecordArchived(item) {
+      if (!item.cases || item.cases.length === 0) return false;
+      return item.cases.every(c => c.status === 'completed');
+    }
+
+    // --- FIREBASE & STORAGE ENGINE ---
+    function initFirebase() {
+      let config = DEFAULT_FIREBASE_CONFIG;
+      const savedConfig = localStorage.getItem('firebase_config');
+      if (savedConfig) {
+        try {
+          config = JSON.parse(savedConfig);
+        } catch (e) {
+          console.error("Firebase config parse error", e);
+        }
+      }
+
+      if (config && config.apiKey && config.projectId) {
+        try {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(config);
+          }
+          db = firebase.firestore();
+          isFirebaseActive = true;
+          updateStatusBanner(true, 'Firebase ক্লাউড ডাটাবেজ কানেক্টেড (smartcasebd-4f9a6)', 'তথ্য সয়ংক্রিয়ভাবে ক্লাউড ডাটাবেজে সেভ হচ্ছে।', 'bg-emerald-50 text-emerald-800 border-emerald-200', 'fa-circle-check text-emerald-600');
+          
+          // Listen to real-time updates from Firebase
+          db.collection('cases').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+            const liveRecords = [];
+            snapshot.forEach((doc) => {
+              liveRecords.push({ id: doc.id, ...doc.data() });
+            });
+            records = liveRecords;
+            renderData();
+          }, (error) => {
+            console.error("Firebase Snapshot error:", error);
+            fallbackToLocalStorage();
+          });
+          return;
+        } catch (err) {
+          console.error("Firebase init failed:", err);
+        }
+      }
+      fallbackToLocalStorage();
+    }
+
+    function fallbackToLocalStorage() {
+      isFirebaseActive = false;
+      db = null;
+      updateStatusBanner(false, 'লোকাল মেমোরি মোড (Offline)', 'Firebase কনফিগার করা হয়নি। তথ্য এই ব্রাউজারে সংরক্ষিত হচ্ছে।', 'bg-amber-50 text-amber-800 border-amber-200', 'fa-triangle-exclamation text-amber-600');
+    }
+
+    function updateStatusBanner(active, title, sub, bgClasses, iconClass) {
+      const banner = document.getElementById('firebaseStatusBanner');
+      banner.className = `rounded-xl p-3 border text-sm flex items-center justify-between shadow-sm transition ${bgClasses}`;
+      document.getElementById('dbStatusTitle').innerText = title;
+      document.getElementById('dbStatusSub').innerText = sub;
+      document.getElementById('dbStatusIcon').className = `fa-solid ${iconClass}`;
+      banner.classList.remove('hidden');
+    }
+
+    // Load Data
+    function loadData() {
+      if (isFirebaseActive) return;
+
+      const local = localStorage.getItem('case_records');
+      if (local) {
+        try {
+          records = JSON.parse(local);
+        } catch (e) {
+          records = INITIAL_DATA;
+        }
+      } else {
+        records = INITIAL_DATA;
+        saveToLocalStorage();
+      }
+      renderData();
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem('case_records', JSON.stringify(records));
+    }
+
+    // Save/Update Record Function
+    async function persistRecord(recordData, recordId = null) {
+      if (isFirebaseActive && db) {
+        try {
+          if (recordId) {
+            await db.collection('cases').doc(recordId).update(recordData);
+          } else {
+            await db.collection('cases').add({ ...recordData, createdAt: Date.now() });
+          }
+        } catch (err) {
+          alert('Firebase এ তথ্য সংরক্ষণ করতে ত্রুটি হয়েছে: ' + err.message);
+        }
+      } else {
+        if (recordId) {
+          const index = records.findIndex(r => r.id === recordId);
+          if (index !== -1) {
+            records[index] = { ...records[index], ...recordData };
+          }
+        } else {
+          const newRecord = {
+            id: 'rec-' + Date.now(),
+            ...recordData,
+            createdAt: Date.now()
+          };
+          records.unshift(newRecord);
+        }
+        saveToLocalStorage();
+        renderData();
+      }
+    }
+
+    // Quick Case Status Toggle Function
+    async function toggleCaseStatus(recordId, caseIndex) {
+      const record = records.find(r => r.id === recordId);
+      if (!record || !record.cases || !record.cases[caseIndex]) return;
+
+      const currentStatus = record.cases[caseIndex].status || 'pending';
+      const newStatus = (currentStatus === 'completed') ? 'pending' : 'completed';
+      
+      const updatedCases = [...record.cases];
+      updatedCases[caseIndex] = {
+        ...updatedCases[caseIndex],
+        status: newStatus
+      };
+
+      await persistRecord({ cases: updatedCases }, recordId);
+    }
+
+    // Delete Record Function
+    async function deleteRecord(id) {
+      if (!confirm('আপনি কি নিশ্চিত যে এই ক্লায়েন্টের সকল রেকর্ড মুছে ফেলতে চান?')) return;
+
+      if (isFirebaseActive && db) {
+        try {
+          await db.collection('cases').doc(id).delete();
+        } catch (err) {
+          alert('Firebase থেকে মুছে ফেলতে সমস্যা হয়েছে: ' + err.message);
+        }
+      } else {
+        records = records.filter(r => r.id !== id);
+        saveToLocalStorage();
+        renderData();
+      }
+    }
+
+    // --- ADMIN MODE TOGGLE ---
+    function toggleAdminMode() {
+      isAdminMode = !isAdminMode;
+      updateAdminUI();
+    }
+
+    function updateAdminUI() {
+      const badge = document.getElementById('modeBadge');
+      const badgeText = document.getElementById('modeBadgeText');
+      const btnText = document.getElementById('toggleModeBtnText');
+      const icon = document.getElementById('toggleModeIcon');
+      const addBtn = document.getElementById('addEntryBtn');
+      const notice = document.getElementById('adminNotice');
+      const adminCols = document.querySelectorAll('.admin-col');
+
+      if (isAdminMode) {
+        badge.className = "px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all bg-amber-500/20 text-amber-300 border border-amber-500/40";
+        badgeText.innerText = "এডমিন মোড (Admin Mode)";
+        btnText.innerText = "ভিউ মোডে ফিরে যান";
+        icon.className = "fa-solid fa-eye text-emerald-400";
+        addBtn.classList.remove('hidden');
+        notice.classList.remove('hidden');
+        adminCols.forEach(col => col.classList.remove('hidden'));
+      } else {
+        badge.className = "px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        badgeText.innerText = "ভিউ মোড (View Mode)";
+        btnText.innerText = "এডমিন মোড চালু করুন";
+        icon.className = "fa-solid fa-user-shield text-amber-400";
+        addBtn.classList.add('hidden');
+        notice.classList.add('hidden');
+        adminCols.forEach(col => col.classList.add('hidden'));
+      }
+
+      renderData();
+    }
+
+    // --- RENDER & CALCULATIONS ---
+    function renderData() {
+      const search = document.getElementById('searchInput').value.toLowerCase().trim();
+      const filter = document.getElementById('filterStatus').value;
+
+      // Count active vs archived
+      let allCount = records.length;
+      let activeCount = 0;
+      let archiveCount = 0;
+      records.forEach(r => {
+        if (isRecordArchived(r)) archiveCount++;
+        else activeCount++;
+      });
+
+      document.getElementById('badgeAllCount').innerText = allCount;
+      document.getElementById('badgeActiveCount').innerText = activeCount;
+      document.getElementById('badgeArchiveCount').innerText = archiveCount;
+
+      // Filter Records based on active Tab
+      const tabFiltered = records.filter(item => {
+        const archived = isRecordArchived(item);
+        if (currentTab === 'active') return !archived;
+        if (currentTab === 'archive') return archived;
+        return true; // 'all'
+      });
+
+      // Filter based on search & payment status
+      const filtered = tabFiltered.filter(item => {
+        const nameMatch = item.name ? item.name.toLowerCase().includes(search) : false;
+        const caseMatch = item.cases ? item.cases.some(c => 
+          (c.caseNo && c.caseNo.toString().toLowerCase().includes(search)) || 
+          (c.appNo && c.appNo.toString().toLowerCase().includes(search))
+        ) : false;
+        
+        const matchesSearch = !search || nameMatch || caseMatch;
+
+        let matchesFilter = true;
+        if (filter === 'due') matchesFilter = item.due > 0;
+        if (filter === 'advance') matchesFilter = item.due < 0;
+        if (filter === 'cleared') matchesFilter = item.due === 0;
+
+        return matchesSearch && matchesFilter;
+      });
+
+      // Update Summary Analytics Stats (Global across active & archive)
+      let totalClients = records.length;
+      let totalCasesCount = 0;
+      let grandTotal = 0;
+      let grandPaid = 0;
+      let grandDue = 0;
+
+      records.forEach(r => {
+        totalCasesCount += (r.cases ? r.cases.length : 0);
+        grandTotal += Number(r.total || 0);
+        grandPaid += Number(r.paid || 0);
+        grandDue += Number(r.due || 0);
+      });
+
+      document.getElementById('statTotalClients').innerText = totalClients;
+      document.getElementById('statTotalCases').innerText = totalCasesCount;
+      document.getElementById('statTotalAmount').innerText = '৳' + grandTotal.toLocaleString('en-IN');
+      document.getElementById('statTotalPaid').innerText = '৳' + grandPaid.toLocaleString('en-IN');
+
+      const dueElem = document.getElementById('statTotalDue');
+      const dueSubElem = document.getElementById('statTotalDueSub');
+      if (grandDue > 0) {
+        dueElem.innerText = '৳' + grandDue.toLocaleString('en-IN');
+        dueElem.className = 'text-xl sm:text-2xl font-bold text-rose-600';
+        dueSubElem.innerText = 'মোট বাকি টাকা';
+      } else if (grandDue < 0) {
+        dueElem.innerText = '৳' + Math.abs(grandDue).toLocaleString('en-IN');
+        dueElem.className = 'text-xl sm:text-2xl font-bold text-emerald-600';
+        dueSubElem.innerText = 'অতিরিক্ত এডভান্স জমা';
+      } else {
+        dueElem.innerText = '৳0';
+        dueElem.className = 'text-xl sm:text-2xl font-bold text-slate-800';
+        dueSubElem.innerText = 'কোন বকেয়া নেই';
+      }
+
+      // Empty State Check
+      const emptyState = document.getElementById('emptyState');
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+        document.getElementById('emptyStateTitle').innerText = (currentTab === 'archive') 
+          ? 'আর্কাইভে কোন সম্পন্ন মামলা পাওয়া যায়নি' 
+          : 'কোন মামলা পাওয়া যায়নি';
+        document.getElementById('desktopTableBody').innerHTML = '';
+        document.getElementById('mobileCardContainer').innerHTML = '';
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      // Render Desktop Table Body (Excel Spreadsheet Multi-Row Style)
+      let tableRowsHtml = '';
+      filtered.forEach((item, itemIdx) => {
+        const cases = (item.cases && item.cases.length > 0) ? item.cases : [{ caseNo: '-', appNo: '-', status: 'pending' }];
+        const caseCount = cases.length;
+        const isArchived = isRecordArchived(item);
+
+        let dueBadgeHtml = '';
+        if (item.due > 0) {
+          dueBadgeHtml = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">৳${Number(item.due).toLocaleString('en-IN')} (বাকি)</span>`;
+        } else if (item.due < 0) {
+          dueBadgeHtml = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">৳${Math.abs(item.due).toLocaleString('en-IN')} (এডভান্স)</span>`;
+        } else {
+          dueBadgeHtml = `<span class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">৳0 (পরিশোধিত)</span>`;
+        }
+
+        cases.forEach((c, idx) => {
+          const isDone = (c.status === 'completed');
+          
+          let statusBadgeHtml = '';
+          if (isDone) {
+            statusBadgeHtml = `
+              <button type="button" ${isAdminMode ? `onclick="toggleCaseStatus('${item.id}', ${idx})"` : ''} 
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 transition ${isAdminMode ? 'hover:bg-emerald-100 cursor-pointer shadow-xs active:scale-95' : 'cursor-default'}" 
+                title="${isAdminMode ? 'ক্লিক করে স্ট্যাটাস পরিবর্তন করুন (হয়নি মোড)' : 'হয়েছে'}">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                <span>হয়েছে</span>
+              </button>
+            `;
+          } else {
+            statusBadgeHtml = `
+              <button type="button" ${isAdminMode ? `onclick="toggleCaseStatus('${item.id}', ${idx})"` : ''} 
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 transition ${isAdminMode ? 'hover:bg-rose-100 cursor-pointer shadow-xs active:scale-95' : 'cursor-default'}" 
+                title="${isAdminMode ? 'ক্লিক করে স্ট্যাটাস পরিবর্তন করুন (হয়েছে মোড)' : 'হয়নি'}">
+                <i class="fa-solid fa-circle-xmark text-rose-500 text-sm"></i>
+                <span>হয়নি</span>
+              </button>
+            `;
+          }
+
+          const isLastCaseOfClient = (idx === caseCount - 1);
+          const borderClass = isLastCaseOfClient ? 'border-b-2 border-slate-300' : 'border-b border-slate-100';
+
+          if (idx === 0) {
+            // First case row of this client (includes row-spanned client details)
+            tableRowsHtml += `
+              <tr class="hover:bg-slate-50/90 transition bg-white">
+                <td rowspan="${caseCount}" class="align-top py-3.5 px-4 text-xs font-semibold text-slate-600 whitespace-nowrap border-r border-slate-200 border-b-2 border-b-slate-300 bg-slate-50/50">
+                  ${formatDate(item.date)}
+                </td>
+                <td rowspan="${caseCount}" class="align-top py-3.5 px-4 font-bold text-slate-800 whitespace-nowrap border-r border-slate-200 border-b-2 border-b-slate-300 bg-slate-50/50">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full ${isArchived ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'} font-bold text-xs flex items-center justify-center">
+                      ${(item.name || 'C')[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <span class="text-sm font-bold">${item.name || '-'}</span>
+                      ${isArchived ? '<span class="ml-2 text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">আর্কাইভড</span>' : ''}
+                    </div>
+                  </div>
+                </td>
+                <td class="py-3 px-4 font-bold text-slate-800 border-r border-slate-100 ${borderClass}">
+                  কেস: ${c.caseNo || '-'}
+                </td>
+                <td class="py-3 px-4 font-semibold text-blue-700 border-r border-slate-100 ${borderClass}">
+                  অ্যাপ: ${c.appNo || '-'}
+                </td>
+                <td class="py-3 px-4 text-center border-r border-slate-200 ${borderClass}">
+                  ${statusBadgeHtml}
+                </td>
+                <td rowspan="${caseCount}" class="align-top py-3.5 px-4 text-right font-bold text-slate-800 border-r border-slate-200 border-b-2 border-b-slate-300 bg-slate-50/30">
+                  ৳${Number(item.total || 0).toLocaleString('en-IN')}
+                </td>
+                <td rowspan="${caseCount}" class="align-top py-3.5 px-4 text-right font-bold text-emerald-600 border-r border-slate-200 border-b-2 border-b-slate-300 bg-slate-50/30">
+                  ৳${Number(item.paid || 0).toLocaleString('en-IN')}
+                </td>
+                <td rowspan="${caseCount}" class="align-top py-3.5 px-4 text-right font-bold border-r border-slate-200 border-b-2 border-b-slate-300 bg-slate-50/30">
+                  ${dueBadgeHtml}
+                </td>
+                ${isAdminMode ? `
+                  <td rowspan="${caseCount}" class="align-top admin-col py-3.5 px-4 text-center border-b-2 border-b-slate-300 bg-slate-50/30 whitespace-nowrap">
+                    <div class="flex items-center justify-center gap-1">
+                      <button onclick="openEditModal('${item.id}')" title="সম্পাদনা / এডিট করুন" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </button>
+                      <button onclick="deleteRecord('${item.id}')" title="মুছে ফেলুন" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    </div>
+                  </td>
+                ` : ''}
+              </tr>
+            `;
+          } else {
+            // Subsequent case rows for the same client
+            tableRowsHtml += `
+              <tr class="hover:bg-slate-50/90 transition bg-white">
+                <td class="py-3 px-4 font-bold text-slate-800 border-r border-slate-100 ${borderClass}">
+                  কেস: ${c.caseNo || '-'}
+                </td>
+                <td class="py-3 px-4 font-semibold text-blue-700 border-r border-slate-100 ${borderClass}">
+                  অ্যাপ: ${c.appNo || '-'}
+                </td>
+                <td class="py-3 px-4 text-center border-r border-slate-200 ${borderClass}">
+                  ${statusBadgeHtml}
+                </td>
+              </tr>
+            `;
+          }
+        });
+      });
+
+      document.getElementById('desktopTableBody').innerHTML = tableRowsHtml;
+
+      // Render Mobile Cards View
+      const cardContainer = document.getElementById('mobileCardContainer');
+      cardContainer.innerHTML = filtered.map(item => {
+        
+        const caseListHtml = (item.cases || []).map((c, idx) => {
+          const isDone = (c.status === 'completed');
+          
+          let statusBadgeHtml = '';
+          if (isDone) {
+            statusBadgeHtml = `
+              <button type="button" ${isAdminMode ? `onclick="toggleCaseStatus('${item.id}', ${idx})"` : ''} 
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 ${isAdminMode ? 'active:scale-95' : ''}">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i> হয়েছে
+              </button>
+            `;
+          } else {
+            statusBadgeHtml = `
+              <button type="button" ${isAdminMode ? `onclick="toggleCaseStatus('${item.id}', ${idx})"` : ''} 
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 ${isAdminMode ? 'active:scale-95' : ''}">
+                <i class="fa-solid fa-circle-xmark text-rose-500"></i> হয়নি
+              </button>
+            `;
+          }
+
+          return `
+            <div class="flex items-center justify-between text-xs bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+              <div class="space-y-0.5">
+                <div class="font-bold text-slate-800 text-xs">কেস নং: ${c.caseNo || '-'}</div>
+                <div class="text-blue-600 text-[11px] font-semibold">অ্যাপ নং: ${c.appNo || '-'}</div>
+              </div>
+              <div>${statusBadgeHtml}</div>
+            </div>
+          `;
+        }).join('');
+
+        let dueStatusBadge = '';
+        if (item.due > 0) {
+          dueStatusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700">বকেয়া: ৳${Number(item.due).toLocaleString('en-IN')}</span>`;
+        } else if (item.due < 0) {
+          dueStatusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">এডভান্স: ৳${Math.abs(item.due).toLocaleString('en-IN')}</span>`;
+        } else {
+          dueStatusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">পরিশোধিত</span>`;
+        }
+
+        const isArchived = isRecordArchived(item);
+
+        return `
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full ${isArchived ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700'} font-bold text-xs flex items-center justify-center">
+                  ${(item.name || 'C')[0].toUpperCase()}
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
+                    <span>${item.name || '-'}</span>
+                    ${isArchived ? '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">আর্কাইভড</span>' : ''}
+                  </h4>
+                  <span class="text-xs text-slate-400">${formatDate(item.date)}</span>
+                </div>
+              </div>
+              <div>${dueStatusBadge}</div>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="text-xs font-semibold text-slate-500 mb-1">মামলা সমুহ (${(item.cases || []).length}টি):</div>
+              ${caseListHtml}
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs">
+              <div>
+                <span class="text-slate-400">মোট চুক্তি:</span>
+                <span class="font-bold text-slate-800 block text-sm">৳${Number(item.total || 0).toLocaleString('en-IN')}</span>
+              </div>
+              <div>
+                <span class="text-slate-400">মোট জমা:</span>
+                <span class="font-bold text-emerald-600 block text-sm">৳${Number(item.paid || 0).toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            ${isAdminMode ? `
+              <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button onclick="openEditModal('${item.id}')" class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold flex items-center gap-1">
+                  <i class="fa-solid fa-pen-to-square"></i> এডিট
+                </button>
+                <button onclick="deleteRecord('${item.id}')" class="px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs font-semibold flex items-center gap-1">
+                  <i class="fa-solid fa-trash-can"></i> ডিলিট
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      // Re-apply admin column visibility
+      if (isAdminMode) {
+        document.querySelectorAll('.admin-col').forEach(col => col.classList.remove('hidden'));
+      }
+    }
+
+
+    // --- MODAL & FORM HANDLERS ---
+    function openAddModal() {
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-circle-plus text-brand-500"></i> <span>নতুন মামলা এন্ট্রি দিন</span>';
+      document.getElementById('recordId').value = '';
+      document.getElementById('inputDate').valueAsDate = new Date();
+      document.getElementById('inputName').value = '';
+      document.getElementById('inputTotal').value = 0;
+      document.getElementById('inputPaid').value = 0;
+      document.getElementById('inputDue').value = 0;
+
+      const container = document.getElementById('caseRowsContainer');
+      container.innerHTML = '';
+      addCaseRow();
+
+      document.getElementById('recordModal').classList.remove('hidden');
+    }
+
+    function openEditModal(id) {
+      const record = records.find(r => r.id === id);
+      if (!record) return;
+
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-brand-500"></i> <span>এন্ট্রি ও মামলা তথ্য সংশোধেন (Edit)</span>';
+      document.getElementById('recordId').value = record.id;
+      document.getElementById('inputDate').value = record.date || '';
+      document.getElementById('inputName').value = record.name || '';
+      document.getElementById('inputTotal').value = record.total || 0;
+      document.getElementById('inputPaid').value = record.paid || 0;
+      document.getElementById('inputDue').value = record.due || 0;
+
+      const container = document.getElementById('caseRowsContainer');
+      container.innerHTML = '';
+      if (record.cases && record.cases.length > 0) {
+        record.cases.forEach(c => addCaseRow(c.caseNo, c.appNo, c.status || 'pending'));
+      } else {
+        addCaseRow();
+      }
+
+      document.getElementById('recordModal').classList.remove('hidden');
+    }
+
+    function closeRecordModal() {
+      document.getElementById('recordModal').classList.add('hidden');
+    }
+
+    function addCaseRow(caseNo = '', appNo = '', status = 'pending') {
+      const container = document.getElementById('caseRowsContainer');
+      const rowId = 'case-row-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+      
+      const isCompleted = (status === 'completed');
+
+      const rowHtml = `
+        <div id="${rowId}" class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+          <input type="text" placeholder="কেস নং (Case No)" value="${caseNo}" 
+            class="case-no-input w-2/5 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          <input type="text" placeholder="আবেদন নং (App No)" value="${appNo}" 
+            class="app-no-input w-2/5 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          
+          <select class="case-status-select px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none ${isCompleted ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
+            <option value="pending" ${!isCompleted ? 'selected' : ''}>🔴 হয়নি</option>
+            <option value="completed" ${isCompleted ? 'selected' : ''}>🟢 হয়েছে</option>
+          </select>
+
+          <button type="button" onclick="removeCaseRow('${rowId}')" title="বাদ দিন" class="text-slate-400 hover:text-rose-600 p-1 transition">
+            <i class="fa-solid fa-trash-can text-sm"></i>
+          </button>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', rowHtml);
+    }
+
+    function removeCaseRow(rowId) {
+      const container = document.getElementById('caseRowsContainer');
+      if (container.children.length > 1) {
+        document.getElementById(rowId).remove();
+      } else {
+        alert('অন্তত একটি কেস নম্বর থাকতে হবে।');
+      }
+    }
+
+    function calculateDue() {
+      const total = Number(document.getElementById('inputTotal').value || 0);
+      const paid = Number(document.getElementById('inputPaid').value || 0);
+      const due = total - paid;
+      document.getElementById('inputDue').value = due;
+    }
+
+    async function handleFormSubmit(event) {
+      event.preventDefault();
+      
+      const recordId = document.getElementById('recordId').value;
+      const date = document.getElementById('inputDate').value;
+      const name = document.getElementById('inputName').value.trim();
+      const total = Number(document.getElementById('inputTotal').value || 0);
+      const paid = Number(document.getElementById('inputPaid').value || 0);
+      const due = total - paid;
+
+      const caseRows = document.querySelectorAll('#caseRowsContainer > div');
+      const cases = [];
+      caseRows.forEach(row => {
+        const caseNo = row.querySelector('.case-no-input').value.trim();
+        const appNo = row.querySelector('.app-no-input').value.trim();
+        const status = row.querySelector('.case-status-select').value;
+        if (caseNo || appNo) {
+          cases.push({ caseNo, appNo, status });
+        }
+      });
+
+      if (cases.length === 0) {
+        alert('অনুগ্রহ করে অন্তত একটি কেস নম্বর বা আবেদন নম্বর লিখুন।');
+        return;
+      }
+
+      const dataPayload = {
+        date,
+        name,
+        cases,
+        total,
+        paid,
+        due
+      };
+
+      await persistRecord(dataPayload, recordId || null);
+      closeRecordModal();
+    }
+
+
+    // --- FIREBASE SETTINGS MODAL ---
+    function openFirebaseModal() {
+      const saved = localStorage.getItem('firebase_config');
+      if (saved) {
+        document.getElementById('firebaseConfigJson').value = saved;
+      }
+      document.getElementById('firebaseModal').classList.remove('hidden');
+    }
+
+    function closeFirebaseModal() {
+      document.getElementById('firebaseModal').classList.add('hidden');
+    }
+
+    function saveFirebaseConfig() {
+      const raw = document.getElementById('firebaseConfigJson').value.trim();
+      if (!raw) {
+        alert('অনুগ্রহ করে বৈধ Firebase Config JSON ইনপুট দিন।');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        localStorage.setItem('firebase_config', JSON.stringify(parsed));
+        closeFirebaseModal();
+        location.reload();
+      } catch (e) {
+        alert('JSON ফরম্যাট সঠিক নয়! অনুগ্রহ করে চেক করে আবার চেষ্টা করুন।');
+      }
+    }
+
+    function clearFirebaseConfig() {
+      if (confirm('আপনি কি Firebase Config মুছে অফলাইন LocalStorage মোডে ফিরতে চান?')) {
+        localStorage.removeItem('firebase_config');
+        closeFirebaseModal();
+        location.reload();
+      }
+    }
+
+
+    // --- UTILITIES ---
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return dateStr;
+    }
+
+    function exportToCSV() {
+      if (records.length === 0) {
+        alert('ডাউনলোড করার মত কোন তথ্য নেই।');
+        return;
+      }
+
+      let csv = 'Date,Name,Case No,Application No,Status,Total,Paid,Due\n';
+      records.forEach(r => {
+        const cases = r.cases || [];
+        if (cases.length === 0) {
+          csv += `"${r.date}","${r.name}","","","","${r.total}","${r.paid}","${r.due}"\n`;
+        } else {
+          cases.forEach((c, i) => {
+            const statusBn = (c.status === 'completed') ? 'হয়েছে' : 'হয়নি';
+            if (i === 0) {
+              csv += `"${r.date}","${r.name}","${c.caseNo || ''}","${c.appNo || ''}","${statusBn}","${r.total}","${r.paid}","${r.due}"\n`;
+            } else {
+              csv += `"","","${c.caseNo || ''}","${c.appNo || ''}","${statusBn}","","",""\n`;
+            }
+          });
+        }
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `case_records_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
